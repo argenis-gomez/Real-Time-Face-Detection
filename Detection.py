@@ -24,7 +24,7 @@ class FaceDetection:
         self.conf = conf
         self.capture_index = capture_index
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.color = (255, 255, 255)
+        self.color = (250, 250, 250)
         print("Using Device: ", self.device)
 
     def get_video_capture(self):
@@ -53,8 +53,7 @@ class FaceDetection:
         :return: Labels and Coordinates of objects detected by model in the frame.
         """
         self.model.to(self.device)
-        frame = cv2.resize(frame, (self.image_size, self.image_size))
-        frame = [frame]
+        frame = cv2.resize(frame, (self.image_size, self.image_size))[:,:,::-1]
         results = self.model(frame)
         labels, cord = results.xyxyn[0][:, -1], results.xyxyn[0][:, :-1]
         return labels, cord
@@ -82,8 +81,8 @@ class FaceDetection:
             if row[4] >= self.conf:
                 x1, y1, x2, y2 = int(row[0] * x_shape), int(row[1] * y_shape), int(row[2] * x_shape), int(row[3] * y_shape)
  
-                cv2.rectangle(frame, (x1, y1), (x2, y2), self.color, 2)
-                cv2.putText(frame, f"{self.class_to_label(labels[i])}: {row[4]*100:.2f}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.7, self.color, 2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), self.color, 1)
+                cv2.putText(frame, f"{self.class_to_label(labels[i])}: {row[4]*100:.2f}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, 1)
 
         return frame
 
@@ -117,7 +116,7 @@ class FaceDetection:
 
 
 
-            cv2.putText(frame, f'FPS: {int(fps)}', (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.5, self.color, 2)
+            cv2.putText(frame, f'FPS: {int(fps)}', (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, self.color, 2)
 
             output = cv2.resize(frame, (512, 512))
 
@@ -131,9 +130,9 @@ class FaceDetection:
 
 # Create a new object and execute.
 if __name__ == '__main__':
-    model_name = 'yolov5/best.pt'
+    model_name = 'yolov5/best.onnx'
     image_size = 512
-    conf = .5
+    conf = .7
     capture_index = 0
 
     detector = FaceDetection(model_name, image_size, conf, capture_index)
